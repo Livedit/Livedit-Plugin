@@ -1,9 +1,15 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: LivEdit
-Bundle-SymbolicName: LivEdit;singleton:=true
+Bundle-SymbolicName: livEdit;singleton:=true
 Bundle-Version: 1.0.0
-Bundle-ClassPath: webbit-0.4.15-full.jar
+Import-Package: org.eclipse.core.commands,
+ org.eclipse.jface.text,
+ org.eclipse.jface.viewers,
+ org.eclipse.swt.widgets,
+ org.eclipse.ui.texteditor
+Require-Bundle: org.eclipse.ui
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Export-Package: org.webbitserver,
  org.webbitserver.dependencies.org.jboss.netty.bootstrap,
  org.webbitserver.dependencies.org.jboss.netty.buffer,
@@ -31,10 +37,3 @@ Export-Package: org.webbitserver,
  org.webbitserver.netty,
  org.webbitserver.stub,
  org.webbitserver.wrapper
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Import-Package: org.eclipse.core.commands,
- org.eclipse.jface.text,
- org.eclipse.jface.viewers,
- org.eclipse.swt.widgets,
- org.eclipse.ui.texteditor
-Require-Bundle: org.eclipse.ui.workbench
