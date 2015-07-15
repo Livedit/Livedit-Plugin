@@ -1,64 +1,52 @@
 package livedit.handlers;
 
+import java.io.IOException;
+import java.net.BindException;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.Collections;
+import java.util.concurrent.ExecutionException;
 
-import org.java_websocket.WebSocket;
-import org.java_websocket.WebSocketImpl;
-import org.java_websocket.drafts.Draft;
-import org.java_websocket.drafts.Draft_17;
-import org.java_websocket.framing.FrameBuilder;
-import org.java_websocket.framing.Framedata;
-import org.java_websocket.handshake.ClientHandshake;
-import org.java_websocket.server.WebSocketServer;
+import org.webbitserver.BaseWebSocketHandler;
+import org.webbitserver.WebServer;
+import org.webbitserver.WebServers;
+import org.webbitserver.WebSocketConnection;
+import org.webbitserver.handler.HttpToWebSocketHandler;
+import org.webbitserver.handler.exceptions.PrintStackTraceExceptionHandler;
 
 
-public class Websocket extends WebSocketServer{
+import org.eclipse.jface.text.ITextSelection;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionProvider;
+import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.texteditor.ITextEditor;
+
+public class Websocket extends BaseWebSocketHandler {
 	
-	private static int counter = 0;
-	
-	public Websocket( int port , Draft d ) throws UnknownHostException {
-		super( new InetSocketAddress( port ), Collections.singletonList( d ) );
-	}
-	
-	public Websocket( InetSocketAddress address, Draft d ) {
-		super( address, Collections.singletonList( d ) );
-	}
-	
-	public void onOpen( WebSocket conn, ClientHandshake handshake ) {
-		counter++;
-		System.out.println( "///////////Opened connection number" + counter );
-	}
+	public void onOpen(WebSocketConnection connection) {
+		//System.out.println(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getEditorReferences());
+		System.out.println("connected");
+		
+    }
 
-	public void onClose( WebSocket conn, int code, String reason, boolean remote ) {
-		System.out.println( "closed" );
-	}
+    public void onClose(WebSocketConnection connection) {
+        System.out.println("closed");
+    }
 
-	public void onError( WebSocket conn, Exception ex ) {
-		System.out.println( "Error:" );
-		ex.printStackTrace();
-	}
+    @Override
+    public void onMessage(WebSocketConnection connection, String msg) throws Exception {
+    	connection.send(msg);
+    }
 
-	public void onMessage( WebSocket conn, String message ) {
-		conn.send( message );
-	}
-
-	public void onMessage( WebSocket conn, ByteBuffer blob ) {
-		conn.send( blob );
-	}
-
-	public void onWebsocketMessageFragment( WebSocket conn, Framedata frame ) {
-		FrameBuilder builder = (FrameBuilder) frame;
-		builder.setTransferemasked( false );
-		conn.sendFrame( frame );
-	}
-	
-	public static void init() throws UnknownHostException {
-		System.out.println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-		WebSocketImpl.DEBUG = false;
-		int port = 9003;
-		new Websocket( port, new Draft_17() ).start();
-	}
+    @Override
+    public void onMessage(WebSocketConnection connection, byte[] msg) {
+    	connection.send(msg);
+    }
+    
 }
