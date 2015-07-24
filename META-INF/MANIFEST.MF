@@ -10,7 +10,14 @@ Import-Package: org.eclipse.core.commands,
  org.eclipse.ui.texteditor
 Require-Bundle: org.eclipse.ui
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Export-Package: org.webbitserver,
+Export-Package: org.jsoup,
+ org.jsoup.examples,
+ org.jsoup.helper,
+ org.jsoup.nodes,
+ org.jsoup.parser,
+ org.jsoup.safety,
+ org.jsoup.select,
+ org.webbitserver,
  org.webbitserver.dependencies.org.jboss.netty.bootstrap,
  org.webbitserver.dependencies.org.jboss.netty.buffer,
  org.webbitserver.dependencies.org.jboss.netty.channel,
