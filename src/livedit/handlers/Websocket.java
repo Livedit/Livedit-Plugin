@@ -1,11 +1,17 @@
+// Created By Woong.
+
 package livedit.handlers;
 
 import javax.swing.plaf.synth.SynthOptionPaneUI;
 
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.ITextOperationTarget;
 import org.eclipse.jface.text.ITextSelection;
+import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
@@ -16,10 +22,14 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.ITextEditor;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 public class Websocket extends BaseWebSocketHandler {
 	
@@ -35,24 +45,29 @@ public class Websocket extends BaseWebSocketHandler {
 				IDocumentProvider dp = tEditor.getDocumentProvider();
 				IDocument du = dp.getDocument(tEditor.getEditorInput());
 				
-				ITextSelection textSelection = (ITextSelection) editor
-				        .getSite().getSelectionProvider().getSelection();
-				int offset = textSelection.getOffset();
+				
+				//int offset = textSelection.getOffset();
+				
+				
 				
 				//System.out.println(du.get());				//editor 내용 전체 긁어오기
-				Display.getCurrent().addFilter(SWT.MouseDown, new Listener(){
-				//Display.getCurrent().addFilter(SWT.FOCUSED, new Listener(){
+				//System.out.println(" " + tEditor.getTitle());	//파일명+확장자
+
+				//Display.getCurrent().addFilter(SWT.MouseDown, new Listener(){		//마우스는 lineNumber가 늦음
+				Display.getCurrent().addFilter(SWT.FOCUSED, new Listener(){
 				
 					@Override
 					public void handleEvent(Event event) {
 						try{
+							
+							ITextSelection textSelection = (ITextSelection) editor
+							        .getSite().getSelectionProvider().getSelection();
+							int offset = textSelection.getOffset();
 							int lineNumber = du.getLineOfOffset(offset);
-							lineNumber = du.getLineOfOffset(offset);
+							
+							System.out.println("lineNumber : " + (lineNumber+1));
 							
 							
-							System.out.println(du.getNumberOfLines(1, 15));
-							//System.out.println(du.getLineInformation(offset));
-							//System.out.println(lineNumber);
 						}catch(Exception e){
 							
 						}
@@ -86,13 +101,39 @@ public class Websocket extends BaseWebSocketHandler {
 								default: {
 									
 									
-									String html = du.get(0, du.getLength());
-									html = html.replaceAll("(\t|\r\n|\n)", "");
-									Document doc = Jsoup.parse(html);
-									System.out.println(doc.toString());
-									/*String html = du.get().replaceAll("(\t|\r\n|\n)", "");
+									String ahtml = du.get(0, du.getLength());
+									ahtml = ahtml.replaceAll("(\t|\r\n|\n)", "");
+									Document doc = Jsoup.parse(ahtml);
+									
+									Elements scriptElement = doc.getElementsByTag("script");
+									//Elements bodyElement = doc.getElementsByTag("body");
+
+									String script = null;
+									//String body = null;
+									
+									for (Element element :scriptElement ){                
+								        for (DataNode node : element.dataNodes()) {
+								        	script = ""+node.getWholeData();
+								            System.out.println(script);
+								        }
+								        System.out.println("-------------------");            
+									}
+									
+									/*for (Element element :bodyElement ){                
+								        for (DataNode node : element.dataNodes()) {
+								        	body = ""+node.getWholeData();
+								            System.out.println(body);
+								        }
+								        System.out.println("-------------------");            
+									}*/
+									
+									//System.out.println(doc.toString());
+									String html = du.get().replaceAll("(\t|\r\n|\n)", "");
 									html = html.replaceAll("\"", "'");
-									onMessage(connection, "{ \"command\" : \"insert\", \"nodeSelector\" : \"html\", \"code\" : \"" + html + "\"}");*/								
+									script = script.replaceAll("\"", "'");
+									//onMessage(connection,	"{ \"command\" : \"insert\", \"nodeSelector\" : \"html\", \"code\" : \"" + html + "\"}");
+									//onMessage(connection,	"{ \"command\" : \"insert\", \"nodeSelector\" : \"html\", \"code\" : \"" + html + "\"}");
+									onMessage(connection,	"{ \"command\" : \"injectJavascript\", \"code\" : \"" + script + "\"}");
 								}
 							}
 							
