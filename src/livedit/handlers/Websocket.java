@@ -45,11 +45,6 @@ public class Websocket extends BaseWebSocketHandler {
 				IDocumentProvider dp = tEditor.getDocumentProvider();
 				IDocument du = dp.getDocument(tEditor.getEditorInput());
 				
-				
-				//int offset = textSelection.getOffset();
-				
-				
-				
 				//System.out.println(du.get());				//editor 내용 전체 긁어오기
 				//System.out.println(" " + tEditor.getTitle());	//파일명+확장자
 
@@ -65,8 +60,14 @@ public class Websocket extends BaseWebSocketHandler {
 							int offset = textSelection.getOffset();
 							int lineNumber = du.getLineOfOffset(offset);
 							
+							int length = 0;
+							
+							for(int i = 0; i <= lineNumber; i++){
+								length += du.getLineLength(i);
+							}
 							System.out.println("lineNumber : " + (lineNumber+1));
 							
+							System.out.println("line data : " + du.get(length-du.getLineLength(lineNumber), du.getLineLength(lineNumber)));
 							
 						}catch(Exception e){
 							
@@ -131,7 +132,6 @@ public class Websocket extends BaseWebSocketHandler {
 									String html = du.get().replaceAll("(\t|\r\n|\n)", "");
 									html = html.replaceAll("\"", "'");
 									script = script.replaceAll("\"", "'");
-									//onMessage(connection,	"{ \"command\" : \"insert\", \"nodeSelector\" : \"html\", \"code\" : \"" + html + "\"}");
 									//onMessage(connection,	"{ \"command\" : \"insert\", \"nodeSelector\" : \"html\", \"code\" : \"" + html + "\"}");
 									onMessage(connection,	"{ \"command\" : \"injectJavascript\", \"code\" : \"" + script + "\"}");
 								}
