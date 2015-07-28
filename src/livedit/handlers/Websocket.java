@@ -2,6 +2,9 @@
 
 package livedit.handlers;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import javax.swing.plaf.synth.SynthOptionPaneUI;
 
 import org.eclipse.jface.text.BadLocationException;
@@ -54,7 +57,6 @@ public class Websocket extends BaseWebSocketHandler {
 					@Override
 					public void handleEvent(Event event) {
 						try{
-							
 							ITextSelection textSelection = (ITextSelection) editor
 							        .getSite().getSelectionProvider().getSelection();
 							int offset = textSelection.getOffset();
@@ -65,9 +67,51 @@ public class Websocket extends BaseWebSocketHandler {
 							for(int i = 0; i <= lineNumber; i++){
 								length += du.getLineLength(i);
 							}
+							
+							String ahtml = du.get(0, length);
+							//ahtml = ahtml.replaceAll("(\t|\r\n|\n)", "");
+							Document doc = Jsoup.parse(ahtml);
+							
+							String lineDoc = du.get(length-du.getLineLength(lineNumber), du.getLineLength(lineNumber));
+							
+							lineDoc = lineDoc.toLowerCase();
+							lineDoc = lineDoc.replaceAll("(\t|\r\n|\n)", "");
+							
+							Elements links = null;
+							
+							int j = 0;
+							
+							String tagName = null;
+							
+							for(; j < lineDoc.length(); j++){
+								if(lineDoc.charAt(j) == '>' || lineDoc.charAt(j) == ' '){
+									break;
+								}
+							}					
+							
+							tagName = lineDoc.substring(1, j);
+							
+							if(tagName.contains("/")){
+								tagName = tagName.replace("/","");
+							}
+						
+							System.out.println("tagName : " + tagName);
+							
+							links = doc.select(tagName);
+							
+							System.out.println(links.size());
+							
+							Element linkTemp = links.get(links.size() - 1);
+							
+							System.out.println("selector1 : " + linkTemp.cssSelector());
+							onMessage(connection,	"{ \"command\" : \"inspect\", \"nodeSelector\" : \"" + linkTemp.cssSelector() + "\"}");
+							
 							System.out.println("lineNumber : " + (lineNumber+1));
 							
 							System.out.println("line data : " + du.get(length-du.getLineLength(lineNumber), du.getLineLength(lineNumber)));
+							
+							System.out.println("----------------------------------------");
+							
 							
 						}catch(Exception e){
 							
@@ -85,7 +129,7 @@ public class Websocket extends BaseWebSocketHandler {
 							//System.out.println(event.keyCode);
 							
 							switch(event.keyCode){
-								case 16777217:	case 16777218:	case 16777219:  case 16777220:									//방향키
+								case 16777219:  case 16777220:	//case 16777217:	case 16777218:								//방향키
 								case 65536:																						//alt
 								case 262144:																					//ctrl
 								case 131072:																					//shift
@@ -115,9 +159,9 @@ public class Websocket extends BaseWebSocketHandler {
 									for (Element element :scriptElement ){                
 								        for (DataNode node : element.dataNodes()) {
 								        	script = ""+node.getWholeData();
-								            System.out.println(script);
+								            //System.out.println(script);
 								        }
-								        System.out.println("-------------------");            
+								        //System.out.println("-------------------");            
 									}
 									
 									/*for (Element element :bodyElement ){                
@@ -132,8 +176,8 @@ public class Websocket extends BaseWebSocketHandler {
 									String html = du.get().replaceAll("(\t|\r\n|\n)", "");
 									html = html.replaceAll("\"", "'");
 									script = script.replaceAll("\"", "'");
-									//onMessage(connection,	"{ \"command\" : \"insert\", \"nodeSelector\" : \"html\", \"code\" : \"" + html + "\"}");
-									onMessage(connection,	"{ \"command\" : \"injectJavascript\", \"code\" : \"" + script + "\"}");
+									onMessage(connection,	"{ \"command\" : \"insert\", \"nodeSelector\" : \"html\", \"code\" : \"" + html + "\"}");
+									//onMessage(connection,	"{ \"command\" : \"injectJavascript\", \"code\" : \"" + script + "\"}");
 								}
 							}
 							

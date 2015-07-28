@@ -31,7 +31,6 @@ public class LivEditHandler extends AbstractHandler{
 			}
 		} catch (InterruptedException | java.util.concurrent.ExecutionException e) {
 		}
-        
-		return null;
+        return null;
 	}
 }
