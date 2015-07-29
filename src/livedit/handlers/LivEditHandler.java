@@ -18,7 +18,7 @@ public class LivEditHandler extends AbstractHandler{
 	public Object execute(ExecutionEvent event)  {
 		try {
 			if(!WBind){
-	        	webServer = WebServers.createWebServer(8080)
+	        	webServer = WebServers.createWebServer(63312)
 	        			.add("/", new Websocket())
 	                    .start()
 	                    .get();
@@ -29,7 +29,10 @@ public class LivEditHandler extends AbstractHandler{
 				webServer.stop();
 				System.out.println("Close WebSocket Server");
 			}
-		} catch (InterruptedException | java.util.concurrent.ExecutionException e) {
+		} catch (InterruptedException  ie) {
+			System.out.println("InterruptedException");
+		} catch (java.util.concurrent.ExecutionException ee){
+			System.out.println("ExecutionException");
 		}
         return null;
 	}
