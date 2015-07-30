@@ -2,6 +2,7 @@
 
 package livedit.handlers;
 
+import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.swt.SWT;
@@ -61,31 +62,35 @@ public class Websocket extends BaseWebSocketHandler {
 									ITextSelection textSelection = (ITextSelection) editor
 									        .getSite().getSelectionProvider().getSelection();
 									int offset = textSelection.getOffset();
-									int lineNumber = du.getLineOfOffset(offset);
+									//int lineNumber = du.getLineOfOffset(offset);
 									
-									int tempLine = textSelection.getStartLine();
+									int lineNumber = textSelection.getStartLine();
 									int column = 0;
+									int length = 0;
 									
-									column = textSelection.getOffset() - du.getLineOffset(tempLine);
+									column = offset - du.getLineOffset(lineNumber);
 									
 									System.out.println("Column : " + column);
 									
-									int length = 0;
+									length = getLength(lineNumber, du);
 									
+									/*int length = 0;
+												
 									for(int i = 0; i <= lineNumber; i++){
 										length += du.getLineLength(i);
-									}
+									}*/
 									
 									String ahtml = du.get(0, length);
 									//ahtml = ahtml.replaceAll("(\t|\r\n|\n)", "");
 									Document doc = Jsoup.parse(ahtml);
 									
-									String lineDoc = du.get(length-du.getLineLength(lineNumber), du.getLineLength(lineNumber));
+									
+									
+									/*String lineDoc = du.get(length-du.getLineLength(lineNumber), du.getLineLength(lineNumber));
 									
 									lineDoc = lineDoc.toLowerCase();
 									lineDoc = lineDoc.replaceAll("(\t|\r\n|\n)", "");
 									
-									Elements links = null;
 									
 									int j = 0;
 									
@@ -108,21 +113,23 @@ public class Websocket extends BaseWebSocketHandler {
 										tagName = tagName.replace("/","");
 									}
 								
-									System.out.println("tagName : " + tagName);
+									System.out.println("tagName : " + tagName);*/
+									//getTagName(lineNumber, length, du, doc);
+									Elements links = null;
 									
-									links = doc.select(tagName);
+									links = getTagName(lineNumber, length, du, doc);
 									
 									System.out.println(links.size());
 									
 									Element linkTemp = links.get(links.size() - 1);
 									
-									System.out.println("selector1 : " + linkTemp.cssSelector());
+									//System.out.println("selector1 : " + linkTemp.cssSelector());
 									
 									onMessage(connection,	"{ \"command\" : \"inspect\", \"nodeSelector\" : \"" + linkTemp.cssSelector() + "\"}");
 									
-									System.out.println("lineNumber : " + (lineNumber+1));
+									//System.out.println("lineNumber : " + (lineNumber+1));
 									
-									System.out.println("line data : " + du.get(length-du.getLineLength(lineNumber), du.getLineLength(lineNumber)));
+									//System.out.println("line data : " + du.get(length-du.getLineLength(lineNumber), du.getLineLength(lineNumber)));
 									
 									System.out.println("----------------------------------------");
 								}
@@ -131,6 +138,7 @@ public class Websocket extends BaseWebSocketHandler {
 								e.printStackTrace();
 							}
 						}
+
 					});
 					
 					Display.getCurrent().addFilter(SWT.FocusOut, new Listener(){
@@ -163,18 +171,12 @@ public class Websocket extends BaseWebSocketHandler {
 									onMessage(connection,	"{ \"command\" : \"injectJavascript\"}");
 									
 								} else if ( check.contains(".js")){
-	
-									String js = du.get().replaceAll("(\t|\r\n|\n)", "");
-									js = js.replaceAll("\"", "'");
-																	
+									
 									onMessage(connection,	"{ \"command\" : \"injectJavascript\"}");
 									
 								} else if (check.contains(".css")){
 									
-									String css = du.get().replaceAll("(\t|\r\n|\n)", "");
-									css = css.replaceAll("\"", "'");
-									
-									onMessage(connection,	"{ \"command\" : \"injectCss\", \"code\" : \"" + css + "\"}");
+									onMessage(connection,	"{ \"command\" : \"injectCss\"}");
 									
 								}
 							} catch (Exception e){
@@ -234,7 +236,6 @@ public class Websocket extends BaseWebSocketHandler {
 											html = html.replaceAll("\"", "'");
 																						
 											onMessage(connection,	"{ \"command\" : \"insert\", \"nodeSelector\" : \"html\", \"code\" : \"" + html + "\"}");
-											//onMessage(connection,	"{ \"command\" : \"injectJavascript\", \"code\" : \"" + script + "\"}");
 											
 										} 
 									}
@@ -267,6 +268,61 @@ public class Websocket extends BaseWebSocketHandler {
     public void onMessage(WebSocketConnection connection, byte[] msg) {
     	connection.send(msg);
     }
+    
+    public int getLength(int lineNumber, IDocument du) throws BadLocationException {
+		// TODO Auto-generated method stub
+		int length = 0;
+		
+		for(int i = 0; i <= lineNumber; i++){
+			length += du.getLineLength(i);
+		}
+		return length;
+		
+	}
+    
+    public Elements getTagName(int lineNumber, int length, IDocument du, Document doc) throws BadLocationException {
+				
+		// TODO Auto-generated method stub
+    	
+    	Elements links = null;
+    	int j = 0;
+		String tagName = null;
+
+    	
+		String lineDoc = du.get(length - du.getLineLength(lineNumber),du.getLineLength(lineNumber));
+
+		lineDoc = lineDoc.toLowerCase();
+		lineDoc = lineDoc.replaceAll("(\t|\r\n|\n)", "");
+
+		
+		System.out.println("lineDoc : " + lineDoc);
+
+		for (; j < lineDoc.length(); j++) {
+			System.out.println("lineDoc : " + lineDoc.charAt(j));
+			if (lineDoc.charAt(j) == '>' || lineDoc.charAt(j) == ' ') {
+				break;
+			}
+		}
+
+		System.out.println("lineDoc j : " + j);
+
+		tagName = lineDoc.substring(1, j);
+
+		if (tagName.contains("/")) {
+			tagName = tagName.replace("/", "");
+		}
+
+		System.out.println("tagName : " + tagName);
+		
+		links = doc.select(tagName);
+		
+		if(links.size() == 0){
+			return getTagName(lineNumber-1, getLength(lineNumber-1, du), du, doc);
+		} else{
+			return links;
+		}
+		
+	}
     
 	/*public void save(final IEditorPart editor){
 		
