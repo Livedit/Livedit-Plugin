@@ -35,8 +35,6 @@ public class LivEditHandler extends AbstractHandler{
 				System.out.println(path+"/"+extension);
 				
 				File fPath = new File(path+"/"+extension);*/
-												
-				
 				
 				webServer = WebServers.createWebServer(63312)
 	        			.add("/", new Websocket())
@@ -47,7 +45,7 @@ public class LivEditHandler extends AbstractHandler{
 	        	System.out.println("Create WebSocket Server");
 			} else{
 				WBind = false;
-				webServer.stop();
+				webServer.stop().get();
 				System.out.println("Close WebSocket Server");
 			}
 		} catch (InterruptedException  ie) {

@@ -27,6 +27,7 @@ import org.jsoup.select.Elements;
 public class Websocket extends BaseWebSocketHandler {
 	
 	String check = null;
+	String extension = null;
 	
 	public void onOpen(WebSocketConnection connection) {
 		System.out.println("connected");
@@ -144,43 +145,47 @@ public class Websocket extends BaseWebSocketHandler {
 					Display.getCurrent().addFilter(SWT.FocusOut, new Listener(){
 						@Override
 						public void handleEvent(Event event) {
-							IWorkbench wb = PlatformUI.getWorkbench();
-							IWorkbenchWindow win = wb.getActiveWorkbenchWindow();
-							IWorkbenchPage page = win.getActivePage();
-							IEditorPart editor = page.getActiveEditor();
-							ITextEditor tEditor = (ITextEditor)editor;
-							IDocumentProvider dp = tEditor.getDocumentProvider();
-							IDocument du = dp.getDocument(tEditor.getEditorInput());
-							
-							page.saveEditor(editor, false);
-							
-							try {
-							
-								if ( check.contains(".html") ){
-									
-									String ahtml = du.get(0, du.getLength());
-									ahtml = ahtml.replaceAll("(\t|\r\n|\n)", "");
-									Document doc = Jsoup.parse(ahtml);
-									
-									
-									
-									String html = du.get().replaceAll("(\t|\r\n|\n)", "");
-									html = html.replaceAll("\"", "'");
-									
-									System.out.println("why?");
-									onMessage(connection,	"{ \"command\" : \"injectJavascript\"}");
-									
-								} else if ( check.contains(".js")){
-									
-									onMessage(connection,	"{ \"command\" : \"injectJavascript\"}");
-									
-								} else if (check.contains(".css")){
-									
-									onMessage(connection,	"{ \"command\" : \"injectCss\"}");
-									
+							if(check != null){
+								if ( ! (check.contains("Exit")) ){
+									IWorkbench wb = PlatformUI.getWorkbench();
+									IWorkbenchWindow win = wb.getActiveWorkbenchWindow();
+									IWorkbenchPage page = win.getActivePage();
+									IEditorPart editor = page.getActiveEditor();
+									if(editor != null){
+										ITextEditor tEditor = (ITextEditor)editor;
+										IDocumentProvider dp = tEditor.getDocumentProvider();
+										IDocument du = dp.getDocument(tEditor.getEditorInput());
+										
+										page.saveEditor(editor, false);
+										
+										try {
+										
+											if ( check.contains(".html") ){
+												
+												String ahtml = du.get(0, du.getLength());
+												ahtml = ahtml.replaceAll("(\t|\r\n|\n)", "");
+												Document doc = Jsoup.parse(ahtml);
+												
+												String html = du.get().replaceAll("(\t|\r\n|\n)", "");
+												html = html.replaceAll("\"", "'");
+												
+												System.out.println("why?");
+												onMessage(connection,	"{ \"command\" : \"injectJavascript\"}");
+												
+											} else if ( check.contains(".js")){
+												System.out.println("js");
+												onMessage(connection,	"{ \"command\" : \"injectJavascript\"}");
+												
+											} else if (check.contains(".css")){
+												System.out.println("css");
+												onMessage(connection,	"{ \"command\" : \"injectCss\"}");
+												
+											}
+										} catch (Exception e){
+											e.printStackTrace();
+										}
+									}
 								}
-							} catch (Exception e){
-								e.printStackTrace();
 							}
 						}
 					});
@@ -188,8 +193,6 @@ public class Websocket extends BaseWebSocketHandler {
 					Display.getCurrent().addFilter(SWT.KeyDown, new Listener(){
 						@Override
 						public void handleEvent(Event event) {
-							String extension = null;
-							
 							
 							check = Display.getCurrent().getActiveShell().toString();
 							extension = check.replace("Shell {Resource - ", "").replace(" - Eclipse Platform}", "");
@@ -254,7 +257,9 @@ public class Websocket extends BaseWebSocketHandler {
 		
     }
 
-    public void onClose(WebSocketConnection connection) {
+    public void onClose(WebSocketConnection connection) throws Exception {
+    	connection.send("{ \"command\" : \"close\"}");
+    	onMessage(connection,	"{ \"command\" : \"close\"}");
     	connection.close();
     	System.out.println("closed");
     }
@@ -305,8 +310,14 @@ public class Websocket extends BaseWebSocketHandler {
 		}
 
 		System.out.println("lineDoc j : " + j);
-
-		tagName = lineDoc.substring(1, j);
+		
+		if(lineDoc.charAt(0) != '<'){
+			System.out.println("                         " + lineDoc);
+			return getTagName(lineNumber-1, getLength(lineNumber-1, du), du, doc);
+			
+		}
+		else
+			tagName = lineDoc.substring(1, j);
 
 		if (tagName.contains("/")) {
 			tagName = tagName.replace("/", "");
@@ -316,6 +327,8 @@ public class Websocket extends BaseWebSocketHandler {
 		
 		links = doc.select(tagName);
 		
+		System.out.println(links);
+		
 		if(links.size() == 0){
 			return getTagName(lineNumber-1, getLength(lineNumber-1, du), du, doc);
 		} else{
@@ -323,20 +336,4 @@ public class Websocket extends BaseWebSocketHandler {
 		}
 		
 	}
-    
-	/*public void save(final IEditorPart editor){
-		
-		Display.getCurrent().asyncExec(new Runnable(){
-
-			@Override
-			public void run() {
-				// TODO Auto-generated method stub
-				ProgressMonitorPart pmp = (ProgressMonitorPart)Display.getCurrent().getMonitors();
-				System.out.println(Display.getCurrent().getMonitors());
-				//editor.doSaveAs();
-				editor.doSave(progressMonitor);
-			}
-			
-		});
-	}*/
 }
