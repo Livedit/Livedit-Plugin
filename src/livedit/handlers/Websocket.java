@@ -178,7 +178,7 @@ public class Websocket extends BaseWebSocketHandler {
 												
 											} else if (check.contains(".css")){
 												System.out.println("css");
-												onMessage(connection,	"{ \"command\" : \"injectCss\"}");
+												onMessage(connection,	"{ \"command\" : \"injectJavascript\"}");
 												
 											}
 										} catch (Exception e){
@@ -298,36 +298,43 @@ public class Websocket extends BaseWebSocketHandler {
 
 		lineDoc = lineDoc.toLowerCase();
 		lineDoc = lineDoc.replaceAll("(\t|\r\n|\n)", "");
-
 		
-		System.out.println("lineDoc : " + lineDoc);
-
+		while(true){
+			if(lineDoc.charAt(0) == ' '){
+				lineDoc = lineDoc.substring(1, lineDoc.length());
+			}else
+				break;
+		}
+		
+		int i = j;
 		for (; j < lineDoc.length(); j++) {
-			System.out.println("lineDoc : " + lineDoc.charAt(j));
+			
 			if (lineDoc.charAt(j) == '>' || lineDoc.charAt(j) == ' ') {
 				break;
+			} else if(lineDoc.charAt(j) == 'b' && lineDoc.charAt(j + 1) =='r' && lineDoc.charAt(j + 2) == '/' && lineDoc.charAt(j + 3) == '>'){
+				j = j + 4;
+				i = j;
+				continue;
+			} else if(lineDoc.charAt(j) == 'b' && lineDoc.charAt(j + 1) =='r' && lineDoc.charAt(j + 2) == '>'){
+				j = j + 3;
+				i = j;
+				continue;
 			}
 		}
-
-		System.out.println("lineDoc j : " + j);
+		System.out.println("TagName : "  + 			lineDoc.substring(i, j));
 		
 		if(lineDoc.charAt(0) != '<'){
-			System.out.println("                         " + lineDoc);
 			return getTagName(lineNumber-1, getLength(lineNumber-1, du), du, doc);
 			
 		}
 		else
-			tagName = lineDoc.substring(1, j);
+			tagName = lineDoc.substring(i + 1, j);
 
 		if (tagName.contains("/")) {
 			tagName = tagName.replace("/", "");
 		}
-
-		System.out.println("tagName : " + tagName);
 		
 		links = doc.select(tagName);
-		
-		System.out.println(links);
 		
 		if(links.size() == 0){
 			return getTagName(lineNumber-1, getLength(lineNumber-1, du), du, doc);
